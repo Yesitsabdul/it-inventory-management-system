@@ -32,11 +32,10 @@ export class UserService implements OnModuleInit {
       ]);
     }
 
-    const usersCount = await this.repo.count();
-    if (usersCount === 0) {
+    const adminUserCheck = await this.repo.findOne({ where: { email: 'admin@example.com' } });
+    if (!adminUserCheck) {
       console.log('Seeding default admin user...');
       const adminRole = await this.roleRepo.findOne({ where: { name: 'Admin' } });
-      const passwordHash = await bcrypt.hash('admin123', 10);
       
       const adminUser = this.repo.create({
         first_name: 'Admin',
@@ -44,11 +43,15 @@ export class UserService implements OnModuleInit {
         email: 'admin@example.com',
         employee_number: 'ADM001',
         is_active: true,
-        password: passwordHash,
+        password: 'admin123', // Entity hook handles the hash
         role: adminRole,
       });
       await this.repo.save(adminUser);
       console.log('Admin user seeded successfully with password: admin123');
+    } else {
+      // Auto-recovery: Fix the double-hashed password from previous bug
+      adminUserCheck.password = 'admin123';
+      await this.repo.save(adminUserCheck); // triggers @BeforeUpdate
     }
   }
 

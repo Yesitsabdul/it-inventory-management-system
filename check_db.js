@@ -1,0 +1,1 @@
+const mysql = require('mysql2/promise'); async function check() { const connection = await mysql.createConnection(''); const [users] = await connection.execute('SELECT id, email FROM users'); console.log('USERS:', users); const [roles] = await connection.execute('SELECT id, name FROM roles'); console.log('ROLES:', roles); await connection.end(); } check().catch(console.error);
