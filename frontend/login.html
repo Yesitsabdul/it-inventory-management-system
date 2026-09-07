@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign In — Haball IT Asset Management</title>
+    <meta name="description" content="Sign in to the Haball IT Asset Management system." />
+    <link rel="stylesheet" href="/src/style.css" />
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+  </head>
+  <body>
+    <div class="login-wrapper">
+      <div class="card login-card">
+        <div class="login-logo" style="display:flex; align-items:center; justify-content:center; gap:0.625rem; margin-bottom:0.375rem;">
+          <img src="https://t3.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://haball.pk&size=128" alt="Haball Logo" style="height:36px; width:36px; border-radius:6px;" />
+          <span style="font-size:1.375rem; font-weight:700; color:var(--text-primary); letter-spacing:-0.01em;">Haball IT</span>
+        </div>
+        <div class="login-subtitle">Sign in to your inventory dashboard</div>
+
+        <div class="modal-error" id="errorMsg" style="display:none; margin-bottom:1rem;"></div>
+
+        <form id="loginForm">
+          <div class="form-group">
+            <label class="form-label" for="email">Email Address</label>
+            <input type="email" id="email" class="form-control" placeholder="admin@company.com" required autocomplete="email" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem;">
+            <label class="form-label" for="password">Password</label>
+            <div class="password-field-wrap">
+              <input type="password" id="password" class="form-control password-input" placeholder="Enter your password" required autocomplete="current-password" />
+              <button type="button" class="password-toggle-btn" tabindex="-1" aria-label="Toggle password visibility" id="pwToggle">
+                <svg class="eye-open" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                <svg class="eye-closed" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+              </button>
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary btn-block" id="loginBtn">Sign In</button>
+        </form>
+
+        <div onclick="document.getElementById('email').value='admin@example.com'; document.getElementById('password').value='admin123';"
+          style="margin-top:1.25rem; padding:0.75rem 1rem; background:var(--accent-primary-bg); border:1px dashed #b8dca0; border-radius:var(--radius-md); cursor:pointer; text-align:center; transition: background 0.15s;">
+          <div style="font-size:0.75rem; font-weight:600; color:var(--accent-primary); margin-bottom:0.35rem; text-transform:uppercase; letter-spacing:0.05em;">Demo Credentials — click to fill</div>
+          <div style="font-size:0.8125rem; color:var(--text-secondary);"><strong>Email:</strong> admin@example.com</div>
+          <div style="font-size:0.8125rem; color:var(--text-secondary);"><strong>Password:</strong> admin123</div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.getElementById('pwToggle').addEventListener('click', function() {
+        const pw = document.getElementById('password');
+        const eyeOpen = this.querySelector('.eye-open');
+        const eyeClosed = this.querySelector('.eye-closed');
+        if (pw.type === 'password') {
+          pw.type = 'text';
+          eyeOpen.style.display = 'none';
+          eyeClosed.style.display = 'block';
+        } else {
+          pw.type = 'password';
+          eyeOpen.style.display = 'block';
+          eyeClosed.style.display = 'none';
+        }
+      });
+    </script>
+    <script type="module" src="/src/login.js"></script>
+  </body>
+</html>

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard — Haball IT Asset Management</title>
+    <meta name="description" content="IT Asset Management dashboard — overview of inventory, users, assignments and maintenance." />
+    <link rel="stylesheet" href="/src/style.css" />
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      import { apiFetch } from '/src/api.js';
+      import { renderLayout } from '/src/layout.js';
+
+      if (!localStorage.getItem('token')) { window.location.href = '/login.html'; }
+
+      const STAT_ICONS = {
+        assets: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+        users: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+        accessories: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="2" width="22" height="20" rx="2"/><path d="M16 8h.01"/><path d="M8 8h.01"/><path d="M12 12h.01"/><path d="M8 16h.01"/><path d="M16 16h.01"/></svg>`,
+        components: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+        assignments: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+        maintenance: `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+      };
+
+      const QUICK_ICONS = {
+        assets: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+        assignments: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>`,
+        users: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>`,
+        maintenance: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,
+        audit: `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+      };
+
+      const html = `
+        <div class="page-header">
+          <div>
+            <h1 class="page-title">Dashboard</h1>
+            <p class="page-subtitle">Overview of your IT inventory</p>
+          </div>
+        </div>
+        <div class="stats-grid">
+          <div class="card stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Assets</span>
+              <div class="stat-card-icon">${STAT_ICONS.assets}</div>
+            </div>
+            <div class="stat-card-value" id="s-assets">—</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Users</span>
+              <div class="stat-card-icon">${STAT_ICONS.users}</div>
+            </div>
+            <div class="stat-card-value" id="s-users">—</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Accessories</span>
+              <div class="stat-card-icon">${STAT_ICONS.accessories}</div>
+            </div>
+            <div class="stat-card-value" id="s-acc">—</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Components</span>
+              <div class="stat-card-icon">${STAT_ICONS.components}</div>
+            </div>
+            <div class="stat-card-value" id="s-comp">—</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Assignments</span>
+              <div class="stat-card-icon">${STAT_ICONS.assignments}</div>
+            </div>
+            <div class="stat-card-value" id="s-assign">—</div>
+          </div>
+          <div class="card stat-card">
+            <div class="stat-card-header">
+              <span class="stat-card-label">Maintenance</span>
+              <div class="stat-card-icon">${STAT_ICONS.maintenance}</div>
+            </div>
+            <div class="stat-card-value" id="s-maint">—</div>
+          </div>
+        </div>
+        <div class="quick-actions">
+          <a href="/assets.html" class="quick-action-btn">${QUICK_ICONS.assets} View Inventory</a>
+          <a href="/assignments.html" class="quick-action-btn">${QUICK_ICONS.assignments} Checkout Asset</a>
+          <a href="/setup/users.html" class="quick-action-btn">${QUICK_ICONS.users} Manage Users</a>
+          <a href="/maintenance.html" class="quick-action-btn">${QUICK_ICONS.maintenance} Maintenance Log</a>
+          <a href="/audit-logs.html" class="quick-action-btn">${QUICK_ICONS.audit} Audit Trail</a>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.25rem;">
+          <div class="card" style="padding:1.25rem 1.5rem;">
+            <div class="section-title">Recent Audit Activity</div>
+            <div id="recent-audits" style="font-size:0.85rem; color:var(--text-secondary);">Loading...</div>
+          </div>
+          <div class="card" style="padding:1.25rem 1.5rem;">
+            <div class="section-title">Recent Assignments</div>
+            <div id="recent-assigns" style="font-size:0.85rem; color:var(--text-secondary);">Loading...</div>
+          </div>
+        </div>
+      `;
+      renderLayout(html, 'dashboard');
+      function animateValue(obj, start, end, duration) {
+        let startTimestamp = null;
+        const step = (timestamp) => {
+          if (!startTimestamp) startTimestamp = timestamp;
+          const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+          obj.innerHTML = Math.floor(progress * (end - start) + start);
+          if (progress < 1) window.requestAnimationFrame(step);
+        };
+        window.requestAnimationFrame(step);
+      }
+      const endpoints = [
+        ['/assets?page=1&limit=1', 's-assets'],
+        ['/users?page=1&limit=1', 's-users'],
+        ['/accessories?page=1&limit=1', 's-acc'],
+        ['/components?page=1&limit=1', 's-comp'],
+        ['/asset-assignments?page=1&limit=1', 's-assign'],
+        ['/maintenance-logs?page=1&limit=1', 's-maint'],
+      ];
+      for (const [url, elId] of endpoints) {
+        apiFetch(url).then(res => {
+          const el = document.getElementById(elId);
+          const total = res.meta.total || 0;
+          if (total > 0) animateValue(el, 0, total, 800);
+          else el.textContent = '0';
+        }).catch(() => {
+          const el = document.getElementById(elId);
+          if (el) el.textContent = '0';
+        });
+      }
+      apiFetch('/audit-logs?page=1&limit=5').then(res => {
+        const el = document.getElementById('recent-audits');
+        if (!res.data.length) { el.innerHTML = '<span style="color:var(--text-muted)">No audit logs yet.</span>'; return; }
+        el.innerHTML = res.data.map(log =>
+          `<div style="padding:0.5rem 0; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+            <span><span class="badge badge-info" style="margin-right:0.4rem">${log.action}</span>${log.entity_type || ''} #${log.entity_id || ''}</span>
+            <span style="color:var(--text-muted); font-size:0.75rem; white-space:nowrap">${new Date(log.created_at).toLocaleDateString()}</span>
+          </div>`
+        ).join('');
+      }).catch(() => { document.getElementById('recent-audits').innerHTML = '<span style="color:var(--text-muted)">Failed to load.</span>'; });
+       apiFetch('/asset-assignments?page=1&limit=5').then(res => {
+        const el = document.getElementById('recent-assigns');
+        if (!res.data.length) { el.innerHTML = '<span style="color:var(--text-muted)">No assignments yet.</span>'; return; }
+        el.innerHTML = res.data.map(a =>
+          `<div style="padding:0.5rem 0; border-bottom:1px solid var(--border-light); display:flex; justify-content:space-between; align-items:center; gap:0.5rem;">
+            <span>${a.asset?.asset_tag || 'Asset'} → ${a.assigned_to?.first_name || 'User'}</span>
+            <span class="badge ${a.checkin_at ? 'badge-success' : 'badge-warning'}">${a.checkin_at ? 'Returned' : 'Checked Out'}</span>
+          </div>`
+        ).join('');
+      }).catch(() => { document.getElementById('recent-assigns').innerHTML = '<span style="color:var(--text-muted)">Failed to load.</span>'; });
+    </script>
+  </body>
+</html>
