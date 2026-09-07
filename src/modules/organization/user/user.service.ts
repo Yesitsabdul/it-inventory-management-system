@@ -36,6 +36,7 @@ export class UserService implements OnModuleInit {
     if (!adminUserCheck) {
       console.log('Seeding default admin user...');
       const adminRole = await this.roleRepo.findOne({ where: { name: 'Admin' } });
+      if (!adminRole) throw new Error('Admin role not found during auto-seed');
       
       const adminUser = this.repo.create({
         first_name: 'Admin',
