@@ -4,7 +4,7 @@
   "framework": "vite",
   "rewrites": [
     {
-      "source": "/((?!assets|login\\.html|favicon|@vite|src).*)",
+      "source": "/((?!assets|setup|login\\.html|settings\\.html|assets\\.html|assignments\\.html|audit-logs\\.html|maintenance\\.html|favicon|@vite|src).*)",
       "destination": "/index.html"
     }
   ]
