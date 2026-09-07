@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, BadRequestException, ConflictException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -15,12 +15,42 @@ import { PaginationDto, PaginatedResult } from '../../../common/dto/pagination.d
 import { instanceToPlain } from 'class-transformer';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   constructor(
     @InjectRepository(User) private repo: Repository<User>,
     @InjectRepository(Role) private roleRepo: Repository<Role>,
     @InjectRepository(Department) private deptRepo: Repository<Department>,
   ) {}
+
+  async onModuleInit() {
+    const rolesCount = await this.roleRepo.count();
+    if (rolesCount === 0) {
+      console.log('Seeding default roles...');
+      await this.roleRepo.save([
+        { name: 'Admin', description: 'Administrator with full access' },
+        { name: 'Employee', description: 'Standard employee role' },
+      ]);
+    }
+
+    const usersCount = await this.repo.count();
+    if (usersCount === 0) {
+      console.log('Seeding default admin user...');
+      const adminRole = await this.roleRepo.findOne({ where: { name: 'Admin' } });
+      const passwordHash = await bcrypt.hash('admin123', 10);
+      
+      const adminUser = this.repo.create({
+        first_name: 'Admin',
+        last_name: 'User',
+        email: 'admin@example.com',
+        employee_number: 'ADM001',
+        is_active: true,
+        password: passwordHash,
+        role: adminRole,
+      });
+      await this.repo.save(adminUser);
+      console.log('Admin user seeded successfully with password: admin123');
+    }
+  }
 
   async getPrefixes(): Promise<string[]> {
     const users = await this.repo.find({ select: ['employee_number'] });
